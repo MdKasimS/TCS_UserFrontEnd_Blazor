@@ -47,7 +47,7 @@
         Console.WriteLine($"Welcome, {signInModel.Email}!");
         try
         {
-            var response = await Http.PostAsJsonAsync("http://localhost:8000/api/login", signInModel);
+            var response = await Http.PostAsJsonAsync("http://127.0.0.1:8000/api/login", signInModel);
             if (response.IsSuccessStatusCode)
             {
                 Console.WriteLine("Signed in successfully!");
