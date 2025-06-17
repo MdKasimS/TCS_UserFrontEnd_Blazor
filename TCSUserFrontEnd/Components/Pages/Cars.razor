@@ -1,4 +1,5 @@
 ﻿@page "/cars"
+@page "/cars/{modelId:int?}"
 @inject HttpClient Http
 @attribute [StreamRendering]
 @using System.Text.Json
@@ -10,60 +11,120 @@
 
 <p>Available Cars in The Car Shop</p>
 
-@if (AllCars==null)
+@if (showError)
 {
-    <p><em>Loading ...</em></p>    
+    <div class="alert alert-danger">
+        Something went wrong. Please try again.
+    </div>
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <td>Id</td>
-                <td>OEMId</td>
-                <td>ModelId</td>
-                <td>VariantId</td>
-                <td>Ex Showroom</td>
-                <td>KmDriven</td>
-                <td>Year</td>
-                <td>Rating</td>
-                <td>Fuel</td>
-                <td>Seller</td>
-                <td>Owner</td>
-                <td>Transmission</td>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (Car car in AllCars)
-            {
+
+    @if (AllCars == null)
+    {
+        <p><em>Loading ...</em></p>
+    }
+    else
+    {
+
+
+        @* <table class="table">
+            <thead>
                 <tr>
-                    <td>@car.Id</td>
-                    <td>@car.NameId</td>
-                    <td>@car.CarModelId</td>
-                    <td>@car.CarVariantId</td>
-                    <td>@car.CarShowRoomPrice</td>
-                    <td>@car.KmDriven</td>
-                    <td>@car.Year</td>
-                    <td>@car.Rating</td>
-                    <td>@car.Fuel</td>
-                    <td>@car.SellerType</td>
-                    <td>@car.OwnerType</td>
-                    <td>@car.TransmissionType</td>
+                    <td>Id</td>
+                    <td>OEMId</td>
+                    <td>ModelId</td>
+                    <td>VariantId</td>
+                    <td>Ex Showroom</td>
+                    <td>KmDriven</td>
+                    <td>Year</td>
+                    <td>Rating</td>
+                    <td>Fuel</td>
+                    <td>Seller</td>
+                    <td>Owner</td>
+                    <td>Transmission</td>
                 </tr>
+            </thead>
+            <tbody>
+                @foreach (Car car in AllCars)
+                {
+                    <tr>
+                        <td>@car.Id</td>
+                        <td>@car.NameId</td>
+                        <td>@car.CarModelId</td>
+                        <td>@car.CarVariantId</td>
+                        <td>@car.CarShowRoomPrice</td>
+                        <td>@car.KmDriven</td>
+                        <td>@car.Year</td>
+                        <td>@car.Rating</td>
+                        <td>@car.Fuel</td>
+                        <td>@car.SellerType</td>
+                        <td>@car.OwnerType</td>
+                        <td>@car.TransmissionType</td>
+                    </tr>
+                }
+            </tbody>
+        </table> *@
+
+        <div class="d-flex flex-wrap justify-content-start gap-4">
+
+            @{
+                var allCars = modelId.HasValue
+                ? AllCars.Where(c => c.CarModelId == modelId.Value).ToList()
+                : AllCars;
             }
-        </tbody>
-    </table>
+
+            @foreach (var car in allCars)
+            {
+                <div class="card mb-4" style="width: 18rem;">
+                    <img class="card-img-top" src="/images/placeholder.png" alt="placeholder" />
+                    <div class="card-body">
+                        <h5 class="card-title">@($"Car #{car.Id}")</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@($"{car.Year} | {car.Fuel}")</h6>
+                        <p class="card-text">
+                            Model: @car.CarModelId<br />
+                            Variant: @car.CarVariantId<br />
+                            Rating: @car.Rating
+                        </p>
+                        <a href="#" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+
+            }
+        </div>
+
+    }
 }
 
 @code {
     private List<Car>? AllCars;
+    private bool showError;
+
+    [Parameter]
+    public int? modelId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        using var httpClient = new HttpClient();
-        httpClient.BaseAddress = new Uri("http://127.0.0.1:5000/");
-        AllCars = await httpClient.GetFromJsonAsync<List<Car>>("api/cars");
-      
+        try
+        {
+            using var httpClient = new HttpClient();
+            httpClient.BaseAddress = new Uri("http://127.0.0.1:5000/");
+            // AllCars = await httpClient.GetFromJsonAsync<List<Car>>("api/cars");
+
+            AllCars = await httpClient.GetFromJsonAsync<List<Car>>("api/cars");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"HTTP error: {ex.Message}");
+            showError = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
+        }
+
+
     }
 
     private class Car
@@ -72,13 +133,13 @@ else
 
         [JsonPropertyName("name_id")]
         public int NameId { get; set; }
-        
+
         [JsonPropertyName("car_model_id")]
         public int CarModelId { get; set; }
 
         [JsonPropertyName("car_variant_id")]
         public int CarVariantId { get; set; }
-        
+
         public int Year { get; set; }
 
         [JsonPropertyName("km_driven")]
@@ -86,7 +147,7 @@ else
 
         [JsonPropertyName("car_showroom_price")]
         public double CarShowRoomPrice { get; set; }
-        
+
         public double Rating { get; set; }
         public string Fuel { get; set; }
 
@@ -95,7 +156,7 @@ else
 
         [JsonPropertyName("owner")]
         public string OwnerType { get; set; }
-        
+
         [JsonPropertyName("transmission")]
         public string TransmissionType { get; set; }
         // public string ListingStatus { get; set; }
