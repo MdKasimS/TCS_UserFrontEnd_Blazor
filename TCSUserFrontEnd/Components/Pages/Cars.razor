@@ -1,0 +1,134 @@
+﻿@page "/cars"
+@inject HttpClient Http
+@attribute [StreamRendering]
+@using System.Text.Json
+@using System.Text.Json.Serialization
+
+<PageTitle>Cars-TCS</PageTitle>
+
+<h1>Cars</h1>
+
+<p>Available Cars in The Car Shop</p>
+
+@if (AllCars==null)
+{
+    <p><em>Loading ...</em></p>    
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <td>Id</td>
+                <td>OEMId</td>
+                <td>ModelId</td>
+                <td>VariantId</td>
+                <td>Ex Showroom</td>
+                <td>KmDriven</td>
+                <td>Year</td>
+                <td>Rating</td>
+                <td>Fuel</td>
+                <td>Seller</td>
+                <td>Owner</td>
+                <td>Transmission</td>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Car car in AllCars)
+            {
+                <tr>
+                    <td>@car.Id</td>
+                    <td>@car.NameId</td>
+                    <td>@car.CarModelId</td>
+                    <td>@car.CarVariantId</td>
+                    <td>@car.CarShowRoomPrice</td>
+                    <td>@car.KmDriven</td>
+                    <td>@car.Year</td>
+                    <td>@car.Rating</td>
+                    <td>@car.Fuel</td>
+                    <td>@car.SellerType</td>
+                    <td>@car.OwnerType</td>
+                    <td>@car.TransmissionType</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Car>? AllCars;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var httpClient = new HttpClient();
+        httpClient.BaseAddress = new Uri("http://127.0.0.1:5000/");
+        AllCars = await httpClient.GetFromJsonAsync<List<Car>>("api/cars");
+      
+    }
+
+    private class Car
+    {
+        public int Id { get; set; }
+
+        [JsonPropertyName("name_id")]
+        public int NameId { get; set; }
+        
+        [JsonPropertyName("car_model_id")]
+        public int CarModelId { get; set; }
+
+        [JsonPropertyName("car_variant_id")]
+        public int CarVariantId { get; set; }
+        
+        public int Year { get; set; }
+
+        [JsonPropertyName("km_driven")]
+        public int KmDriven { get; set; }
+
+        [JsonPropertyName("car_showroom_price")]
+        public double CarShowRoomPrice { get; set; }
+        
+        public double Rating { get; set; }
+        public string Fuel { get; set; }
+
+        [JsonPropertyName("seller_type")]
+        public string SellerType { get; set; }
+
+        [JsonPropertyName("owner")]
+        public string OwnerType { get; set; }
+        
+        [JsonPropertyName("transmission")]
+        public string TransmissionType { get; set; }
+        // public string ListingStatus { get; set; }
+    }
+
+    private enum Seller
+    {
+        Dealer,
+        Individual,
+        Trustmark_Dealer
+    }
+
+    private enum Transmission
+    {
+        Automatic,
+        Manual
+    }
+
+    private enum Owner
+    {
+        First_Owner,
+        Fourth_And_Above_Owner,
+        Second_Owner,
+        Test_Drive_Car,
+        Third_Owner
+    }
+
+    private enum InventoryStatus
+    {
+        Available,
+        Sold,
+        Reserved,
+        Not_Available,
+    }
+
+}
