@@ -1,6 +1,7 @@
 ﻿@page "/cars"
 @page "/cars/{modelId:int?}"
 @inject HttpClient Http
+@rendermode InteractiveServer
 @attribute [StreamRendering]
 @using System.Text.Json
 @using System.Text.Json.Serialization
@@ -77,7 +78,7 @@ else
             @foreach (var car in allCars)
             {
                 <div class="card mb-4" style="width: 18rem;">
-                    <img class="card-img-top" src="/images/placeholder.png" alt="placeholder" />
+                    <img class="card-img-top" src="/images/placeholder.png" alt="Car image" />
                     <div class="card-body">
                         <h5 class="card-title">@($"Car #{car.Id}")</h5>
                         <h6 class="card-subtitle mb-2 text-muted">@($"{car.Year} | {car.Fuel}")</h6>
@@ -86,10 +87,12 @@ else
                             Variant: @car.CarVariantId<br />
                             Rating: @car.Rating
                         </p>
-                        <a href="#" class="btn btn-primary">View Details</a>
+                        <div class="d-flex justify-content-between">
+                            <button class="btn btn-outline-success" @onclick="() => AddToCart(car.Id)">Add To Cart</button>
+                            <a href="@($"/cars/details/{car.Id}")" class="btn btn-primary">Show Details</a>
+                        </div>
                     </div>
                 </div>
-
             }
         </div>
 
@@ -125,6 +128,13 @@ else
         }
 
 
+    }
+
+    //This method is binded on UI so it should return either void or Task. Also, internally 
+    // it should not raise any exception
+    private async Task AddToCart(int carId)
+    {
+        Console.WriteLine($"Car id:{carId} added to cart");
     }
 
     private class Car
